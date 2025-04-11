@@ -1,5 +1,7 @@
 import subprocess
+import os
 import json
+file_name = 'wifipass.json'
 
 def infoExtract(phrase,command):
     process = subprocess.Popen(f"{command}", stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -15,9 +17,15 @@ def main():
     keyDict = {}
     ssid = infoExtract('All User Profile','netsh wlan show profile')
     for i in ssid:
-        key = infoExtract("Key Content",f'netsh wlan show profile name="{i}" key=clear')
-        keyDict.update({i:key[0]})
-    with open('key.json',"w") as f:
+        if infoExtract("Key Content",f'netsh wlan show profile name="{i}" key=clear'):
+            key = infoExtract("Key Content",f'netsh wlan show profile name="{i}" key=clear')
+            keyDict.update({i:key[0]})
+    if os.path.exists(file_name):      
+        with open(file_name,"r") as f:
+            cont= f.read()
+            known_networks = json.loads(cont)
+        keyDict.update(known_networks) 
+    with open(file_name,"w") as f:
         json.dump(keyDict,f)
 if __name__ == "__main__":
     main()
